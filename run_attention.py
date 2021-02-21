@@ -4,7 +4,6 @@ try:
     import json
     import glob
     import argparse
-    import cv2
 
     print("numpy/scipy imports:")
     import numpy as np
@@ -20,43 +19,30 @@ try:
 except ImportError:
     print("Need to fix the installation")
     raise
-
 print("All imports okay. Yay!")
 
 
-def find_lights_indexes(image):
-    indices = np.where(np.all(image != 0, axis=-1))
-    return indices[1], indices[0]
-
-
-def find_green_lights(image):
-    result = image.copy()
-    new_image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-    lower = np.array([0, 130, 100])
-    upper = np.array([255, 179, 255])
-    mask = cv2.inRange(new_image, lower, upper)
-    result = cv2.bitwise_and(result, result, mask=mask)
-    return result
-
-
-def find_red_lights(image):
-    result = image.copy()
-    new_image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-    lower = np.array([120, 25, 0])
-    upper = np.array([179, 255, 100])
-    mask = cv2.inRange(new_image, lower, upper)
-    result = cv2.bitwise_and(result, result, mask=mask)
-    return result
-
-
 def find_tfl_lights(c_image: np.ndarray, **kwargs):
-    res = find_red_lights(c_image)
-    x_red, y_red = find_lights_indexes(res)
+    """
+    Detect candidates for TFL lights. Use c_image, kwargs and you imagination to implement
+    :param c_image: The image itself as np.uint8, shape of (H, W, 3)
+    :param kwargs: Whatever config you want to pass in here
+    :return: 4-tuple of x_red, y_red, x_green, y_green
+    """
+    # my code here
+    kernel = np.ones((3, 3)) / -9
+    kernel[1, 1] = 8 / 9
+    image = np.array(Image.open(c_image))
+    c_image = image.copy() / 255
+    convolved_red,convolved_green = ndimage.convolve(c_image[:, :, 0], kernel),ndimage.convolve(c_image[:, :, 1], kernel)
+    red_img, green_img = ndimage.maximum_filter(convolved_red, 50), ndimage.maximum_filter(convolved_green, 50)
+    red_position, green_position = np.argwhere(red_img == convolved_red), np.argwhere(green_img == convolved_green)
+    red_position, green_position = list(filter(lambda l: c_image[l[0], l[1], 0] > 0.8, red_position)), list(
+        filter(lambda l: c_image[l[0], l[1], 1] > 0.8, green_position))
+    x_red, y_red = [p[0] for p in red_position], [p[1] for p in red_position]
+    x_green, y_green = [p[0] for p in green_position], [p[1] for p in green_position]
 
-    res = find_green_lights(c_image)
-    x_green, y_green = find_lights_indexes(res)
-
-    return x_red, y_red, x_green, y_green
+    return y_red, x_red, y_green, x_green
 
 
 def show_image_and_gt(image, objs, fig_num=None):
@@ -80,12 +66,10 @@ def test_find_tfl_lights(image_path, json_path=None, fig_num=None):
         gt_data = json.load(open(json_path))
         what = ['traffic light']
         objects = [o for o in gt_data['objects'] if o['label'] in what]
-
     show_image_and_gt(image, objects, fig_num)
-
     red_x, red_y, green_x, green_y = find_tfl_lights(image, some_threshold=42)
-    plt.plot(red_x, red_y, 'ro', color='r', markersize=4)
-    plt.plot(green_x, green_y, 'ro', color='g', markersize=4)
+    plt.plot(red_x, red_y, '+', color='r', markersize=4)
+    plt.plot(green_x, green_y, '+', color='g', markersize=4)
 
 
 def main(argv=None):
@@ -110,5 +94,4 @@ def main(argv=None):
     plt.show(block=True)
 
 
-if __name__ == '__main__':
-    main()
+# main()
