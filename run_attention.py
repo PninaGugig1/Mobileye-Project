@@ -32,15 +32,16 @@ def find_tfl_lights(c_image: np.ndarray, **kwargs):
     # my code here
     image = c_image
     c_image = image.copy() / 300
-    kernel = np.ones((3, 3)) / -9
-    kernel[1, 1] = 8 / 9
+    kernel = np.ones((3, 3)) / -2
+    kernel[1, 1] = 8
     convolved_green, convolved_red = ndimage.convolve(c_image[:, :, 1], kernel), ndimage.convolve(c_image[:, :, 0],
                                                                                                   kernel)
-    red_filtered_img, green_filtered_img = ndimage.maximum_filter(convolved_red, 50), ndimage.maximum_filter(
+    red_filtered_img, green_filtered_img = ndimage.maximum_filter(convolved_red,50), ndimage.maximum_filter(
         convolved_green, 50)
+
     red_position = list(filter(lambda l: c_image[l[0], l[1], 0] > 0.8, np.argwhere(red_filtered_img == convolved_red)))
-    green_position = list(
-        filter(lambda l: c_image[l[0], l[1], 1] > 0.8, np.argwhere(green_filtered_img == convolved_green)))
+    green_position = list(filter(lambda l: c_image[l[0], l[1], 1] > 0.8, np.argwhere(green_filtered_img == convolved_green)))
+
     x_red, y_red = [p[0] for p in red_position], [p[1] for p in red_position]
     x_green, y_green = [p[0] for p in green_position], [p[1] for p in green_position]
 
@@ -75,8 +76,6 @@ def test_find_tfl_lights(image_path, json_path=None, fig_num=None):
     red_x, red_y, green_x, green_y = find_tfl_lights(image, some_threshold=42)
     plt.plot(red_x, red_y, '+', color='r', markersize=4)
     plt.plot(green_x, green_y, '+', color='g', markersize=4)
-    # plt.plot(red_x, red_y, 'ro', color='r', markersize=4)
-    # plt.plot(green_x, green_y, 'ro', color='g', markersize=4)
 
 
 def main(argv=None):
@@ -103,6 +102,9 @@ def main(argv=None):
     else:
         print("Bad configuration?? Didn't find any picture to show")
     plt.show(block=True)
+
+
+main()
 
 
 
