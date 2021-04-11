@@ -32,12 +32,13 @@ def find_tfl_lights(c_image: np.ndarray, **kwargs):
     # my code here
     image = c_image
     c_image = image.copy() / 300
-    kernel = np.ones((3, 3)) / -2
-    kernel[1, 1] = 8
+    kernel = np.ones((3, 3)) / - 9
+    kernel[1, 1] = 8 / 9
     convolved_green, convolved_red = ndimage.convolve(c_image[:, :, 1], kernel), ndimage.convolve(c_image[:, :, 0],
                                                                                                   kernel)
-    red_filtered_img, green_filtered_img = ndimage.maximum_filter(convolved_red,50), ndimage.maximum_filter(
-        convolved_green, 50)
+    red_filtered_img, green_filtered_img = ndimage.maximum_filter(convolved_red,20), ndimage.maximum_filter(
+        convolved_green, 20)
+    plt.imshow(red_filtered_img)
 
     red_position = list(filter(lambda l: c_image[l[0], l[1], 0] > 0.8, np.argwhere(red_filtered_img == convolved_red)))
     green_position = list(filter(lambda l: c_image[l[0], l[1], 1] > 0.8, np.argwhere(green_filtered_img == convolved_green)))
@@ -45,7 +46,8 @@ def find_tfl_lights(c_image: np.ndarray, **kwargs):
     x_red, y_red = [p[0] for p in red_position], [p[1] for p in red_position]
     x_green, y_green = [p[0] for p in green_position], [p[1] for p in green_position]
 
-    return y_red, x_red, y_green, x_green
+    # return y_red, x_red, y_green, x_green
+    return [],[],[],[]
 
 
 def show_image_and_gt(image, objs, fig_num=None):
