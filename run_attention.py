@@ -46,8 +46,7 @@ def find_tfl_lights(c_image: np.ndarray, **kwargs):
     x_red, y_red = [p[0] for p in red_position], [p[1] for p in red_position]
     x_green, y_green = [p[0] for p in green_position], [p[1] for p in green_position]
 
-    # return y_red, x_red, y_green, x_green
-    return [],[],[],[]
+    return y_red, x_red, y_green, x_green
 
 
 def show_image_and_gt(image, objs, fig_num=None):
